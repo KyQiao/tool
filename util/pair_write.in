@@ -1,0 +1,16 @@
+units          lj
+atom_style     atomic
+dimension      3
+boundary       p p p
+
+lattice        fcc 0.465
+region         box block 0 8 0 8 0 8
+create_box     1 box
+create_atoms   1 box
+mass           1 1.0
+
+pair_style     table linear 4000
+# pair_style     table spline 4000
+# pair_coeff     * * m_potential.table SHOULDER 2.5
+pair_coeff     * * table.txt SHOULDER 2.5
+# pair_write     1 1 4000 r 0.8 2.5 table2.txt SHOULDER

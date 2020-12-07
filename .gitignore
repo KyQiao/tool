@@ -1,0 +1,11 @@
+3rdparty/
+.vscode/
+build/
+video/
+*.xyz
+*.gz
+*.a
+data/:
+!data/fcc.xyz
+!data/hcp.xyz
+!data/bcc.xyz

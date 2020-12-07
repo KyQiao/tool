@@ -1,0 +1,18 @@
+add hdf5 io port
+https://github.com/BlueBrain/HighFive
+and 
+http://web.mit.edu/fwtools_v3.1.0/www/cpplus_RM/index.html
+
+
+
+mem leak detect 
+valgrind --tool=memcheck --leak-check=yes example
+
+valgrind detect mem leak
+https://blog.csdn.net/cyberspecter/article/details/52649934
+
+https://www.valgrind.org/docs/manual/quick-start.html#quick-start.intro
+
+
+the api diagram
+https://www.processon.com/diagraming/5fbf6069f346fb4e4162bafc
