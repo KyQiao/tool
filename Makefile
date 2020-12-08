@@ -65,7 +65,7 @@ all: checkdirs $(objects) build  copy-headers
 # 	$(CC) $(TOTALFALGS) $(INCLUDES) $^ -o $@
 
 build: $(OBJ)
-	$(CC) -O3 -Wall -pedantic --std=c++11 -shared -fPIC -Wl,-soname,libcolloid.so -o $(BUILD_DIR)libcolloid.so $^ -lz -lvoro++ -fopenmp
+	$(CC) -O3 -Wall -pedantic --std=c++11 -shared -fPIC -Wl,-soname,libcolloid.so -lz -lvoro++ -fopenmp $^ -o $(BUILD_DIR)libcolloid.so
 	# -llapack -lblas  -lfftw3
 
 checkdirs: $(BUILD_DIR) $(BUILD_MODULE_DIR)
@@ -82,6 +82,7 @@ copy-headers:
 
 clean:
 	@rm -rf $(BUILD_DIR)
+	@cd ./functions && make clean && cd ..;
 
 functions:
 	@cd ./functions && make && cd ..;

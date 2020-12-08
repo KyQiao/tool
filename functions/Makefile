@@ -6,15 +6,15 @@ BUILDFLAGS = -O3 -fPIC -Wall -pedantic -c --std=c++11
 TOTALFALGS = -O3 -shared -fPIC -Wall -pedantic -lz -lvoro++ --std=c++11
 
 #build directory
-LibPath = ../build/
-installPath = ../bin/
+LibPath = ~/usr/
+installPath = ~/usr/bin/
 
 
 # grab all the cpp source file
 SRC=$(wildcard *.cpp)
 
 # The path of all hpp file
-INCLUDES = $(LibPath)include
+INCLUDES = $(LibPath)include/colloid/
 
 #grab all the headers
 HEADERS = $(wildcard $(INCLUDES)/*.hpp)
@@ -34,7 +34,7 @@ build: $(OBJ)
 	@echo compile finished
 
 $(installPath)%: %.cpp
-	$(CC) $< -O3  -Wall -pedantic --std=c++11 -I$(INCLUDES)  -lcolloid -lz -fopenmp -lm -o $@
+	$(CC) -O3  -Wall -pedantic --std=c++11 -I $(INCLUDES)  -lcolloid -lz -fopenmp -lvoro++ -lm $< -o $@
 	@echo $@ compile finished
 # $(CC) -O3 -Wall -pedantic --std=c++11 -I$(INCLUDES) -L$(LibPath) -lcolloid -lz -lvoro++ $< -o $@
 
@@ -44,4 +44,4 @@ $(installPath):
 	@mkdir -p $@
 
 clean:
-	@rm -rf $(installPath)
+	@rm -rf $(OBJ)
