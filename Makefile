@@ -14,7 +14,8 @@ TOTALFALGS = -O3 -shared -fPIC -Wall -pedantic -lz -lvoro++ -fopenmp --std=c++11
 # grab all the folders
 MODULES=base \
 		math\
-		structure 
+		structure\
+		dynamic
 
 # all source folder
 SRC_DIR=$(addprefix src/,$(MODULES))

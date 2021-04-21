@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 
-
 #include "Base.hpp"
 #include "StructureFactor.hpp"
 
@@ -20,10 +19,7 @@ int main(int argc, char const* argv[]) {
 
   auto data = Frame();
 
-  if (filename.substr(filename.size() - 2) == "gz")
-    data.readLammps(filename, Frame::compressType::gz);
-  else
-    data.readLammps(filename);
+  data.read(filename);
 
   if (argc == 4) {
     std::string outputName = filename + ".sk.xyz";

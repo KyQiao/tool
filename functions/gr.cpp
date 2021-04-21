@@ -22,12 +22,9 @@ int main(int argc, char const* argv[]) {
   double maxr = std::stod(argv[3]);
 
   auto data = Frame();
-  if (filename.substr(filename.size() - 2) == "gz")
-    data.readLammps(filename, Frame::compressType::gz);
-  else
-    data.readLammps(filename);
+  data.read(filename);
 
-  if (argc == 3) {
+  if (argc == 4) {
     std::string outputName = filename + ".gr.xyz";
     if (data.is2D())
       gr2d(data, bins, maxr).output(outputName);

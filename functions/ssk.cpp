@@ -6,7 +6,7 @@
 
 int main(int argc, char const* argv[]) {
   if ((argc != 4) && (argc != 5)) {
-    std::cout << "calculate seletec particles' structure factor"<<std::endl;
+    std::cout << "calculate seletec particles' structure factor" << std::endl;
     std::cout << "input number should be one or two" << std::endl;
     std::cout << "ssk input.xyz 10(window) 3.14(kmax) or \n"
               << "ssk input.xyz 10(window) 3.14(kmax) output.sk.xyz"
@@ -20,10 +20,7 @@ int main(int argc, char const* argv[]) {
 
   auto data = Frame();
 
-  if (filename.substr(filename.size() - 2) == "gz")
-    data.readLammps(filename, Frame::compressType::gz);
-  else
-    data.readLammps(filename);
+  data.read(filename);
 
   data.select("c_ackland == 2");
   // data.describe();

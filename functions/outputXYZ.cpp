@@ -29,10 +29,7 @@ int main(int argc, char const *argv[]) {
 
   std::string filename = argv[1];
   auto data = Frame();
-  if (filename.substr(filename.size() - 2) == "gz")
-    data.readLammps(filename, Frame::compressType::gz);
-  else
-    data.readLammps(filename);
+  data.read(filename);
 
   if (argc == 2) {
     std::string outputName = filename + ".xyzOnly.xyz";

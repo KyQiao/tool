@@ -15,14 +15,15 @@ public:
 
   Table(){};
 
-// using a list of vector to init class
+  // using a list of vector to init class
   Table(std::initializer_list<std::vector<dtype>> l) :
       data(l) {}
   ~Table(){};
 
   void output(std::string filename) {
     std::fstream outfile;
-    outfile.open(filename, std::ios::out);
+    // change to app then you can customize header
+    outfile.open(filename, std::ios::out | std::ios::app);
 
     for (size_t j = 0; j < this->rows(); j++) {
       for (size_t i = 0; i < this->cols(); i++) {

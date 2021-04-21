@@ -16,3 +16,13 @@ https://www.valgrind.org/docs/manual/quick-start.html#quick-start.intro
 
 the api diagram
 https://www.processon.com/diagraming/5fbf6069f346fb4e4162bafc
+
+
+todo 
+增加 debug 模式
+在make中加入debug选项
+debug下增加内存检查
+
+function
+    density profile 
+

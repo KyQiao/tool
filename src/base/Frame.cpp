@@ -134,6 +134,7 @@ void Frame::readLammpsBase(fileInput& file, bool readAttr) {
       this->id.resize(this->particleN);
       callOrder.push_back([this](size_t index, std::stringstream& s) { s >> this->id[index]; });
     } else if (tmp == "type") {
+      this->type.resize(this->particleN);
       callOrder.push_back([this](size_t index, std::stringstream& s) { s >> this->type[index]; });
     } else {
       if (readAttr) {
@@ -160,10 +161,15 @@ void Frame::readLammpsBase(fileInput& file, bool readAttr) {
   // resize space for data for faster load
 
   (this->attr_table).setrows(this->particleN);
-
+#if DebugInput
+  std::cout << "attribute table seted " << std::endl;
+#endif
   index = 0;
   while (getline(file, line)) {
     std::stringstream tmp(line);
+#if DebugInput
+    std::cout << tmp.str() << std::endl;
+#endif
     for (auto& f : callOrder) {
       f(index, tmp);
     }
@@ -196,8 +202,9 @@ void Frame::readLammps(const std::string& fileName, compressType compress, bool 
   this->xl = this->boxXH - this->boxXL;
   this->yl = this->boxYH - this->boxYL;
   this->zl = this->boxZH - this->boxZL;
-
+#if DebugInput
   std::cout << "reading complete" << std::endl;
+#endif
 }
 
 void Frame::describe() {
@@ -366,7 +373,7 @@ void Frame::select(std::string s) {
       if (!func(target_int->operator[](i)))
         deleteList.push_back(i);
   }
-
+  std::cout << "condition: " << s << std::endl;
   std::cout << "delete " << deleteList.size() << " element of " << this->particleN << std::endl;
 
   removeIndicesFromVector<dtype, std::vector<size_t>>(this->x, deleteList);
