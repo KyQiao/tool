@@ -45,6 +45,30 @@ public:
   //load data
   // low and high are the index of fileIndex vector.
   void load(size_t step = 1, size_t low = 0, size_t high = SIZE_T_MAX);
+
+  // construc date IO interface for Data
+  Frame* front() const noexcept {
+    if (data.size() >= 1)
+      return data[0].get();
+    else
+      return nullptr;
+  }
+
+  Frame* operator[](size_t i) const noexcept {
+    return data[i].get();
+  }
+
+  // only for debug use
+  Frame* at(size_t i) {
+    if (i <= data.size())
+      return data[i].get();
+    else
+      throw std::runtime_error("Data access out of range");
+  }
+
+  size_t size() const noexcept {
+    return data.size();
+  }
 };
 
 #endif
