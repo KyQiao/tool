@@ -36,6 +36,7 @@ public:
   std::unordered_map<std::string, size_t> attr_index;  //dict store index and names. i.e. d["q"]=0 d["c_pe"]=1
   Frame(){};
   Frame(std::string file) {
+    read(file);
   }
   ~Frame(){};
 
