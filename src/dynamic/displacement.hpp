@@ -28,6 +28,52 @@ public:
   virtual void cleanup(){};
 };
 
+/* Compute correlated displacement properties with unified pattern.
+       Those properties include
+        1. MDS
+        2. non-Gaussian parameter
+        3. von Hove function
+        4. F(q, t)
+        5. Q4
+    */
+template <template <bool> class T, bool isMonotype>
+T<isMonotype> compute_correlated_displacement_property() const {
+  /* compute possible dts in logrithmic scale, equivalent to the following python code:
+           dtindex = np.unique((np.exp(np.log(1.15)*np.arange(300)) + 0.5).astype(np.int))
+           assert dtindex[-1] > maxNframe
+           dtindex = dtindex[dtindex < maxNframe]
+           Note that disp(dt=0)=0, so the result should be calculated analytically */
+  assert_frameIDs_evenly_separated();
+  const size_t deltaF = std::abs(frameID[1] - frameID[0]);
+  std::vector<size_t> dts(1);  // the first one is zero
+  size_t dt = 1, k = 1;
+  while (dt < nframe) {
+    if (dt != dts.back())
+      dts.push_back(dt);
+    dt = static_cast<size_t>(exp(log(1.15) * (k++)) + 0.5);
+  }
+
+  T<isMonotype> property(dts.size(), ntype);
+  dts.push_back(nframe);  // to make sure the following inner loop stop correctly
+  for (size_t i = 0; i < nframe; ++i) {
+    Cframe cfold = getFrameByIndex(i);
+    if (!isMonotype) property.typeIDs = cfold.type.data();
+    /* The following loop has logical error, since dts[dts.size()] is undefined
+               Error: for (k = 1; i+dts[k]<nframe; ++k) { // dts[k=0]=0
+               However, k<dts.size() is also incorrect.
+               Hence we add the last element of dts to be nframe,
+               to make sure the following loop stop correctly.  */
+    for (k = 1; i + dts[k] < nframe; ++k) {  // dts[k=0]=0
+      Cframe cfnew = getFrameByIndex(i + dts[k]);
+      //std::cout << '(' << k << ',' << i << ',' << i+dts[k] << ')' << std::endl;
+      property.update(k, dts[k] * deltaF, cfnew - cfold);
+    }
+  }
+
+  property.cleanup();
+  return property;
+}
+
 template <bool isMonotype>
 class MSD_t : public DispProperty {
 public:

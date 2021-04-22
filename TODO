@@ -23,6 +23,7 @@ todo
 在make中加入debug选项
 debug下增加内存检查
 
-function
-    density profile 
+add cmake
 
+Note:
+make will compile every cpp file in src into object.
