@@ -10,6 +10,8 @@
 
 #define Debug 0
 
+size_t SIZE_T_MAX = std::numeric_limits<size_t>::max();
+
 std::string
 get_stem(const fs::path &p) {
   return (p.stem().string());

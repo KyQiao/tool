@@ -21,7 +21,7 @@ namespace fs = ghc::filesystem;
 
 #include "Frame.hpp"
 #include "Table.hpp"
-size_t SIZE_T_MAX = std::numeric_limits<size_t>::max();
+extern size_t SIZE_T_MAX;
 
 class Data {
 public:
