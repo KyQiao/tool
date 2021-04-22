@@ -24,14 +24,11 @@ int main(int argc, char const* argv[]) {
   int bins = std::stoi(std::string(argv[2]));
 
   Frame data = Frame();
-  if (filename.substr(filename.size() - 2) == "gz")
-    data.readLammps(filename, Frame::compressType::gz);
-  else
-    data.readLammps(filename);
+  data.read(filename);
 
   const double binsize = (data.boxZH - data.boxZL) / bins;
   const double binVolume = binsize * data.xl * data.yl;
-  const double fourThirdPi_d8 = 4.1887902047863905/8;
+  const double fourThirdPi_d8 = 4.1887902047863905 / 8;
   const double ratio = fourThirdPi_d8 / binVolume;
   std::vector<double> hist(bins), binedge(bins);
   omp_lock_t* hist_locks = new omp_lock_t[bins];
@@ -65,7 +62,7 @@ int main(int argc, char const* argv[]) {
       if (data.type[i] == 1)
         hist[index] += 1;
       else
-        hist[index] += 2.744; //1.4^3
+        hist[index] += 2.744;  //1.4^3
       omp_unset_lock(&hist_locks[index]);
     }
   }
