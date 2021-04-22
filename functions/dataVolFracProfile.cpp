@@ -20,6 +20,13 @@ int main(int argc, char const* argv[]) {
   }
 
   std::string folder = argv[1];
+  fs::path dirName = fs::u8path(folder);
+
+  if (!fs::is_directory(dirName)) {
+    std::cout << "input folder name is invalid!" << std::endl;
+    return 0;
+  }
+
   int bins = std::stoi(std::string(argv[2]));
 
   Data data(folder);
@@ -84,10 +91,8 @@ int main(int argc, char const* argv[]) {
 
   std::cout << "table finished" << std::endl;
 
-  fs::path dirName = fs::u8path(folder);
-
   if (argc == 3) {
-    std::string outputName = dirName.filename().string() + ".volFracProf.xyz";
+    std::string outputName = dirName.parent_path().filename().string() + ".volFracProf.xyz";
     Table({binedge, hist}).output(outputName);
     // out.output(outputName);
   } else {
