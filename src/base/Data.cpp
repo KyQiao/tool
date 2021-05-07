@@ -146,7 +146,7 @@ void Data::load(size_t step, size_t low, size_t high) {
     high = size;
   if (high < low)
     throw std::runtime_error("current range contains no file");
-  while (low <= high) {
+  while (low < high) {
 #if Debug
     std::cout << "reading file:" << this->folder + left + std::to_string(fileIndex[low]) + right << std::endl;
 #endif
