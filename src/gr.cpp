@@ -14,10 +14,6 @@
 
 const double PI = acos(-1);
 
-inline double periodic_distance(double x, double lx) {
-  return (std::abs(x) > 0.5 * lx) ? ((x > 0) ? x - lx : x + lx) : x;
-}
-
 Table gr2d(const Frame& data, size_t bins, double maxr) {
   double xl = (data.boxXH - data.boxXL), yl = (data.boxYH - data.boxYL);
   double rmax = std::min(maxr, std::min(xl * 0.5, yl * 0.5));

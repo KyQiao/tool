@@ -5,12 +5,49 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Cover_Tree.hpp"
 #include "Table.hpp"
 #include "type.hpp"
+
+inline double periodic_distance(double x, double lx) {
+  return (std::abs(x) > 0.5 * lx) ? ((x > 0) ? x - lx : x + lx) : x;
+};
 
 struct Disp {
   std::vector<dtype> dx, dy, dz;
   long dt;
+};
+
+// point struct for CoverTree class
+struct Point {
+  std::vector<double> _vec;
+  size_t _id;
+  std::vector<dtype>* _boxsize;
+
+  Point(std::vector<double> v, size_t id, std::vector<dtype>* boxsize) :
+      _vec(v), _id(id), _boxsize(boxsize) {}
+
+  double distance(const Point& p) const {
+    const std::vector<double>& vec = p.getVec();
+    double dist = 0;
+    size_t lim = vec.size();
+    for (int i = 0; i < lim; i++) {
+      double d = periodic_distance((vec[i] - _vec[i]), _boxsize->operator[](i));
+      dist += d * d;
+    }
+    dist = sqrt(dist);
+    return dist;
+  };
+  const std::vector<double>& getVec() const {
+    return _vec;
+  };
+  const size_t& getId() const {
+    return _id;
+  };
+  // void print() const;
+  bool operator==(const Point& p) const {
+    return (_vec == p.getVec() && _id == p.getId());
+  };
 };
 
 class Frame {
@@ -29,7 +66,7 @@ public:
   std::vector<dtype> x{};
   std::vector<dtype> y{};
   std::vector<dtype> z{};
-
+  CoverTree<Point> cTree;
   Table attr_table;        //where the rest properties store [property][particle ID]
   std::string attr_order;  //i.e. "q c_pe c_voro[1] c_ackland ... "
 
@@ -102,6 +139,25 @@ public:
       }
     }
     return disp;
+  };
+
+  Point data2Point(size_t i) {
+    std::vector<dtype> boxsize = {xl, yl, zl};
+    auto* b = &boxsize;
+    return Point({x[i], y[i], z[i]}, id[i], b);
+  };
+
+  void buildCoverTree() {
+    std::vector<dtype> boxsize = {xl, yl, zl};
+    auto* b = &boxsize;
+
+    for (size_t i = 0; i < particleN; i++) {
+      cTree.insert(Point({x[i], y[i], z[i]}, id[i], b));
+    }
+    if (cTree.isValidTree())
+      std::cout << "Insert test: \t\t\t\tPassed\n";
+    else
+      std::cout << "Insert test: \t\t\t\tFailed\n";
   };
 };
 

@@ -1,3 +1,5 @@
+#if __cplusplus < 201402L
+
 #include <cstddef>
 #include <memory>
 #include <type_traits>
@@ -38,5 +40,6 @@ make_unique(Args&&...)
     = delete;
 }  // namespace std
 
+#endif
 // adding make_unique for c11
 // https://stackoverflow.com/questions/7038357/make-unique-and-perfect-forwarding
