@@ -134,6 +134,7 @@ void Frame::readLammpsBase(fileInput& file, bool readAttr) {
       this->id.resize(this->particleN);
       callOrder.push_back([this](size_t index, std::stringstream& s) { s >> this->id[index]; });
     } else if (tmp == "type") {
+      this->type.resize(this->particleN);
       callOrder.push_back([this](size_t index, std::stringstream& s) { s >> this->type[index]; });
     } else {
       if (readAttr) {
@@ -160,10 +161,15 @@ void Frame::readLammpsBase(fileInput& file, bool readAttr) {
   // resize space for data for faster load
 
   (this->attr_table).setrows(this->particleN);
-
+#if DebugInput
+  std::cout << "attribute table seted " << std::endl;
+#endif
   index = 0;
   while (getline(file, line)) {
     std::stringstream tmp(line);
+#if DebugInput
+    std::cout << tmp.str() << std::endl;
+#endif
     for (auto& f : callOrder) {
       f(index, tmp);
     }
@@ -196,42 +202,65 @@ void Frame::readLammps(const std::string& fileName, compressType compress, bool 
   this->xl = this->boxXH - this->boxXL;
   this->yl = this->boxYH - this->boxYL;
   this->zl = this->boxZH - this->boxZL;
-
+#if DebugInput
   std::cout << "reading complete" << std::endl;
+#endif
 }
 
+// For the 2d data, by default xy plane is used
 void Frame::describe() {
   std::string base = "<FrameData>";
   base += "\n\ttotal particle number= " + std::to_string(particleN) + "\n\tframe time = " + std::to_string(timestep) + "\n<Box size>\n" + "\tx: (" + std::to_string(boxXL) + ", " + std::to_string(boxXH) + ")\n" + "\ty: (" + std::to_string(boxYL) + ", " + std::to_string(boxYH) + ")\n" + "\tz: (" + std::to_string(boxZL) + ", " + std::to_string(boxZH) + ")\n";
 
   std::string data = "few lines from data:\n";
 
-  std::cout << base << data
-            << std::left << std::setw(12) << "id"
-            << std::left << std::setw(12) << "x"
-            << std::left << std::setw(12) << "y"
-            << std::left << std::setw(12) << "z"
-            << "\n";
+  if (is2D()) {
+    std::cout << base << data
+              << std::left << std::setw(12) << "id"
+              << std::left << std::setw(12) << "x"
+              << std::left << std::setw(12) << "y"
+              << "\n";
+    for (size_t i = 0; i < std::min(size_t(5), this->particleN); i++)
+      std::cout
+          << std::left << std::setw(12) << id[i]
+          << std::left << std::setw(12) << x[i]
+          << std::left << std::setw(12) << y[i]
+          << "\n";
+    for (size_t i = 0; i < 3; i++)
+      std::cout << std::left << std::setw(12) << "...";
+    std::cout << "\n";
+    for (size_t i = particleN - 5; i < particleN; i++)
+      std::cout
+          << std::left << std::setw(12) << id[i]
+          << std::left << std::setw(12) << x[i]
+          << std::left << std::setw(12) << y[i]
+          << "\n";
+  } else {
+    std::cout << base << data
+              << std::left << std::setw(12) << "id"
+              << std::left << std::setw(12) << "x"
+              << std::left << std::setw(12) << "y"
+              << std::left << std::setw(12) << "z"
+              << "\n";
+    for (size_t i = 0; i < std::min(size_t(5), this->particleN); i++)
+      std::cout
+          << std::left << std::setw(12) << id[i]
+          << std::left << std::setw(12) << x[i]
+          << std::left << std::setw(12) << y[i]
+          << std::left << std::setw(12) << z[i]
+          << "\n";
+    for (size_t i = 0; i < 4; i++)
+      std::cout << std::left << std::setw(12) << "...";
+    std::cout << "\n";
+    for (size_t i = particleN - 5; i < particleN; i++)
+      std::cout
+          << std::left << std::setw(12) << id[i]
+          << std::left << std::setw(12) << x[i]
+          << std::left << std::setw(12) << y[i]
+          << std::left << std::setw(12) << z[i]
+          << "\n";
+  }
 
-  for (size_t i = 0; i < std::min(size_t(5), this->particleN); i++)
-    std::cout
-        << std::left << std::setw(12) << id[i]
-        << std::left << std::setw(12) << x[i]
-        << std::left << std::setw(12) << y[i]
-        << std::left << std::setw(12) << z[i]
-        << "\n";
-
-  for (size_t i = 0; i < 4; i++)
-    std::cout << std::left << std::setw(12) << "...";
-  std::cout << "\n";
-
-  for (size_t i = particleN - 5; i < particleN; i++)
-    std::cout
-        << std::left << std::setw(12) << id[i]
-        << std::left << std::setw(12) << x[i]
-        << std::left << std::setw(12) << y[i]
-        << std::left << std::setw(12) << z[i]
-        << "\n";
   if (!this->attr_order.empty()) {
     std::stringstream ss(this->attr_order);
     std::string token;
@@ -366,7 +395,7 @@ void Frame::select(std::string s) {
       if (!func(target_int->operator[](i)))
         deleteList.push_back(i);
   }
-
+  std::cout << "condition: " << s << std::endl;
   std::cout << "delete " << deleteList.size() << " element of " << this->particleN << std::endl;
 
   removeIndicesFromVector<dtype, std::vector<size_t>>(this->x, deleteList);

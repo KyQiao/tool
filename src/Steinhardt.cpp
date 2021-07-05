@@ -19,11 +19,6 @@
 
 const double PI = std::acos(-1);
 
-// should move to  util
-inline double periodic_distance(double x, double lx) {
-  return (std::abs(x) > 0.5 * lx) ? ((x > 0) ? x - lx : x + lx) : x;
-}
-
 // return the Y_l-m part
 // Only positive m is calculated, here return the minus part
 std::complex<double> q_lm(const std::vector<std::complex<double>> &qllist, const int &m) {

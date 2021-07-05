@@ -9,3 +9,4 @@ data/:
 !data/fcc.xyz
 !data/hcp.xyz
 !data/bcc.xyz
+tests/data
