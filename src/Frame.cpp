@@ -409,3 +409,15 @@ void Frame::select(std::string s) {
 
   this->particleN = this->x.size();
 }
+
+std::vector<dtype>& Frame::get(std::string attr) {
+  size_t index;
+  if (this->attr_index.count(attr)) {
+    index = this->attr_index.operator[](attr);
+  } else {
+    std::cout << "input attr " << attr << " not find\n"
+              << "supported attrs are " << this->attr_order << std::endl;
+    throw std::runtime_error("\n");
+  }
+  return this->attr_table.data.operator[](index);
+};

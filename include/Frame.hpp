@@ -115,6 +115,8 @@ public:
 
   bool is3D() const;
 
+  std::vector<dtype>& get(std::string);
+
   // the defination of displacement data follows:
   // the first is new, the second is old
   // whether sort or not, the disp vector will have ordered id.
