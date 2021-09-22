@@ -9,6 +9,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "type.hpp"
@@ -136,6 +137,15 @@ void Frame::readLammpsBase(fileInput& file, bool readAttr) {
     } else if (tmp == "type") {
       this->type.resize(this->particleN);
       callOrder.push_back([this](size_t index, std::stringstream& s) { s >> this->type[index]; });
+    } else if (tmp == "xu") {
+      this->xu.resize(this->particleN);
+      callOrder.push_back([this](size_t index, std::stringstream& s) { s >> this->xu[index]; });
+    } else if (tmp == "yu") {
+      this->yu.resize(this->particleN);
+      callOrder.push_back([this](size_t index, std::stringstream& s) { s >> this->yu[index]; });
+    } else if (tmp == "zu") {
+      this->zu.resize(this->particleN);
+      callOrder.push_back([this](size_t index, std::stringstream& s) { s >> this->zu[index]; });
     } else {
       if (readAttr) {
         size_t col = (this->attr_table).cols();
@@ -148,7 +158,7 @@ void Frame::readLammpsBase(fileInput& file, bool readAttr) {
 #if DebugInput
         std::cout << "binding cols " << std::endl;
 #endif
-        callOrder.push_back([col, this](size_t index, std::stringstream& s) { s >> (this->attr_table).data[col][index]; });
+        callOrder.push_back([col, this](size_t index, std::stringstream& s) { s >> (this->attr_table)[col][index]; });
         this->attr_order += tmp + " ";
         this->attr_index[tmp] = index++;
       }
@@ -174,6 +184,13 @@ void Frame::readLammpsBase(fileInput& file, bool readAttr) {
       f(index, tmp);
     }
     index++;
+  }
+  // if contain type info
+  if (!this->type.empty()) {
+    std::unordered_set<unsigned long> set;
+    for (auto& v : this->type)
+      set.insert(v);
+    this->ntype = set.size();
   }
 }
 
@@ -271,7 +288,7 @@ void Frame::describe() {
     std::cout << "\n";
     for (size_t i = 0; i < std::min(size_t(5), this->particleN); i++) {
       for (size_t j = 0; j < this->attr_table.cols(); j++) {
-        std::cout << std::left << std::setw(12) << this->attr_table.data[j][i];
+        std::cout << std::left << std::setw(12) << (this->attr_table)[j][i];
       }
       std::cout << "\n";
     }
@@ -282,7 +299,7 @@ void Frame::describe() {
 
     for (size_t i = particleN - 5; i < particleN; i++) {
       for (size_t j = 0; j < this->attr_table.cols(); j++) {
-        std::cout << std::left << std::setw(12) << this->attr_table.data[j][i];
+        std::cout << std::left << std::setw(12) << (this->attr_table)[j][i];
       }
       std::cout << "\n";
     }
@@ -300,13 +317,25 @@ bool Frame::isInBox() {
 }
 
 bool Frame::is2D() const {
-  if (this->z.size() == 0)
+  if (this->z.size() == 0 || this->zu.size() == 0)
     return true;
   return false;
 }
 
 bool Frame::is3D() const {
-  if (this->z.size() == 0)
+  if (this->z.size() == 0 || this->zu.size() == 0)
+    return false;
+  return true;
+}
+
+bool Frame::is2D() {
+  if (this->z.size() == 0 || this->zu.size() == 0)
+    return true;
+  return false;
+}
+
+bool Frame::is3D() {
+  if (this->z.size() == 0 || this->zu.size() == 0)
     return false;
   return true;
 }
@@ -335,7 +364,7 @@ void Frame::select(std::string s) {
   std::function<bool(double)> func;
 
   if (this->attr_index.count(token)) {
-    target = &this->attr_table.data[attr_index[token]];
+    target = &this->attr_table[attr_index[token]];
   } else if (token == "x") {
     target = &this->x;
   } else if (token == "y") {
@@ -404,7 +433,7 @@ void Frame::select(std::string s) {
   removeIndicesFromVector<size_t, std::vector<size_t>>(this->id, deleteList);
   removeIndicesFromVector<size_t, std::vector<size_t>>(this->type, deleteList);
 
-  for (auto& v : this->attr_table.data)
+  for (auto& v : this->attr_table)
     removeIndicesFromVector<dtype, std::vector<size_t>>(v, deleteList);
 
   this->particleN = this->x.size();
@@ -419,5 +448,5 @@ std::vector<dtype>& Frame::get(std::string attr) {
               << "supported attrs are " << this->attr_order << std::endl;
     throw std::runtime_error("\n");
   }
-  return this->attr_table.data.operator[](index);
+  return (this->attr_table)[index];
 };

@@ -4,15 +4,17 @@
 #include <fstream>
 #include <initializer_list>
 #include <iostream>
+#include <iterator>
 #include <string>
 #include <vector>
 
 #include "type.hpp"
 
 class Table {
-public:
+private:
   std::vector<std::vector<dtype>> data;
 
+public:
   Table(){};
 
   // using a list of vector to init class
@@ -67,6 +69,31 @@ public:
   void setrows(size_t i) {
     for (auto& v : this->data)
       v.resize(i);
+  }
+
+  std::vector<dtype>& operator[](size_t idx) {
+    return this->data.operator[](idx);
+  }
+
+  // expose vector iterator
+  std::vector<std::vector<dtype>>::iterator begin() {
+    return data.begin();
+  }
+
+  std::vector<std::vector<dtype>>::iterator end() {
+    return data.end();
+  }
+
+  std::vector<std::vector<dtype>>::const_iterator cbegin() const {
+    return data.cbegin();
+  }
+
+  std::vector<std::vector<dtype>>::const_iterator cend() const {
+    return data.cend();
+  }
+
+  void push_back(std::vector<double>& v) {
+    data.push_back(v);
   }
 };
 

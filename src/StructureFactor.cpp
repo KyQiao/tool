@@ -22,7 +22,8 @@ Table sk2d(const Frame& data, size_t window, double kmax) {
   double k = 0;
   size_t xMaxIndex = static_cast<size_t>((kmax / dkx) / window);
   size_t yMaxIndex = static_cast<size_t>((kmax / dky) / window);
-
+  kx.reserve(xMaxIndex);
+  ky.reserve(yMaxIndex);
   for (size_t i = 0; i < xMaxIndex; i++) {
     for (size_t j = 0; j < yMaxIndex; j++) {
       k = std::sqrt(dkx * dkx * window * i * window * i
@@ -62,6 +63,9 @@ Table sk3d(const Frame& data, size_t window, double kmax) {
   size_t xMaxIndex = static_cast<size_t>((kmax / dkx) / window);
   size_t yMaxIndex = static_cast<size_t>((kmax / dky) / window);
   size_t zMaxIndex = static_cast<size_t>((kmax / dkz) / window);
+  kx.reserve(xMaxIndex);
+  ky.reserve(yMaxIndex);
+  kz.reserve(zMaxIndex);
   for (size_t i = 0; i < xMaxIndex; i++) {
     for (size_t j = 0; j < yMaxIndex; j++) {
       for (size_t l = 0; l < zMaxIndex; l++) {
@@ -92,4 +96,155 @@ Table sk3d(const Frame& data, size_t window, double kmax) {
     sumOfSin = 0;
   }
   return Table({kx, ky, kz, sk});
+}
+
+Table sk3d_scalar(const Frame& data, size_t window, double kmax, size_t bins) {
+  double dkx = 2 * PI / (data.boxXH - data.boxXL);
+  double dky = 2 * PI / (data.boxYH - data.boxYL);
+  double dkz = 2 * PI / (data.boxZH - data.boxZL);
+
+  std::vector<dtype> kx, ky, kz;
+
+  // choose maxk and window size, calculated mesh of vector.
+  double k = 0;
+  int index;
+  const double binsize = kmax / bins;
+  std::vector<double> hist(bins), count(bins), binedge(bins);
+  omp_lock_t* hist_locks = new omp_lock_t[bins];
+
+#pragma omp parallel for
+  for (size_t i = 0; i < bins; i++) {
+    omp_init_lock(&hist_locks[i]);
+  }
+
+  size_t xMaxIndex = static_cast<size_t>((kmax / dkx) / window);
+  size_t yMaxIndex = static_cast<size_t>((kmax / dky) / window);
+  size_t zMaxIndex = static_cast<size_t>((kmax / dkz) / window);
+  kx.reserve(xMaxIndex);
+  ky.reserve(yMaxIndex);
+  kz.reserve(zMaxIndex);
+
+  for (size_t i = 0; i < xMaxIndex; i++) {
+    for (size_t j = 0; j < yMaxIndex; j++) {
+      for (size_t l = 0; l < zMaxIndex; l++) {
+        k = std::sqrt(dkx * dkx * window * i * window * i
+                      + dky * dky * window * j * window * j
+                      + dkz * dkz * window * l * window * l);
+        if (k < kmax) {
+          kx.push_back(dkx * window * i);
+          ky.push_back(dky * window * j);
+          kz.push_back(dkz * window * l);
+        }
+      }
+    }
+  }
+
+#pragma omp parallel for private(k, index)
+  for (size_t i = 0; i < kx.size(); i++) {
+    double sumOfCos = 0, sumOfSin = 0;
+    for (size_t j = 0; j < data.particleN; j++) {
+      sumOfCos += std::cos(kx[i] * data.x[j] + ky[i] * data.y[j] + kz[i] * data.z[j]);
+      sumOfSin += std::sin(kx[i] * data.x[j] + ky[i] * data.y[j] + kz[i] * data.z[j]);
+    }
+    k = std::sqrt(kx[i] * kx[i] + ky[i] * ky[i] + kz[i] * kz[i]);
+    index = static_cast<size_t>(k / binsize);
+    omp_set_lock(&hist_locks[index]);
+    hist[index] += std::pow(sumOfCos, 2) + std::pow(sumOfSin, 2);
+    count[index] += 1;
+    omp_unset_lock(&hist_locks[index]);
+  }
+#pragma omp parallel for
+  for (size_t i = 0; i < bins; i++)
+    omp_destroy_lock(&hist_locks[i]);
+  delete[] hist_locks;
+
+  // const double V = data.xl * data.yl * data.zl;
+  // const double density = 8 * PI * PI * PI / V;
+  // const double coff = 4. / 3. * PI * binsize * binsize * binsize  * density * data.particleN;
+  // const double coff = 4. / 3. * PI * binsize * binsize * binsize * data.particleN;
+
+  for (size_t i = 0; i < bins; ++i) {
+    binedge[i] = (i + 0.5) * binsize;
+    // this is correct, normalize use particle number, not volume
+    if (count[i] != 0) {
+      hist[i] /= count[i] * data.particleN;
+    }
+    // this is near correct, volumn * density is nearly the number
+    // yet not correct since we know number in bin exactly
+    // hist[i] /= (1. + 3. * i * i + 3. * i) * coff;
+  }
+
+  return Table({binedge, hist});
+}
+
+Table sk2d_scalar(const Frame& data, size_t window, double kmax, size_t bins) {
+  double dkx = 2 * PI / (data.boxXH - data.boxXL);
+  double dky = 2 * PI / (data.boxYH - data.boxYL);
+
+  std::vector<dtype> kx, ky;
+
+  // choose maxk and window size, calculated mesh of vector.
+  double k = 0;
+  int index;
+  const double binsize = kmax / bins;
+  std::vector<double> hist(bins), count(bins), binedge(bins);
+  omp_lock_t* hist_locks = new omp_lock_t[bins];
+
+#pragma omp parallel for
+  for (size_t i = 0; i < bins; i++) {
+    omp_init_lock(&hist_locks[i]);
+  }
+
+  size_t xMaxIndex = static_cast<size_t>((kmax / dkx) / window);
+  size_t yMaxIndex = static_cast<size_t>((kmax / dky) / window);
+  kx.reserve(xMaxIndex);
+  ky.reserve(yMaxIndex);
+
+  for (size_t i = 0; i < xMaxIndex; i++) {
+    for (size_t j = 0; j < yMaxIndex; j++) {
+      k = std::sqrt(dkx * dkx * window * i * window * i
+                    + dky * dky * window * j * window * j);
+      if (k < kmax) {
+        kx.push_back(dkx * window * i);
+        ky.push_back(dky * window * j);
+      }
+    }
+  }
+
+#pragma omp parallel for private(k, index)
+  for (size_t i = 0; i < kx.size(); i++) {
+    double sumOfCos = 0, sumOfSin = 0;
+    for (size_t j = 0; j < data.particleN; j++) {
+      sumOfCos += std::cos(kx[i] * data.x[j] + ky[i] * data.y[j]);
+      sumOfSin += std::sin(kx[i] * data.x[j] + ky[i] * data.y[j]);
+    }
+    k = std::sqrt(kx[i] * kx[i] + ky[i] * ky[i]);
+    index = static_cast<size_t>(k / binsize);
+    omp_set_lock(&hist_locks[index]);
+    hist[index] += std::pow(sumOfCos, 2) + std::pow(sumOfSin, 2);
+    count[index] += 1;
+    omp_unset_lock(&hist_locks[index]);
+  }
+#pragma omp parallel for
+  for (size_t i = 0; i < bins; i++)
+    omp_destroy_lock(&hist_locks[i]);
+  delete[] hist_locks;
+
+  // const double V = data.xl * data.yl * data.zl;
+  // const double density = 8 * PI * PI * PI / V;
+  // const double coff = 4. / 3. * PI * binsize * binsize * binsize  * density * data.particleN;
+  // const double coff = 4. / 3. * PI * binsize * binsize * binsize * data.particleN;
+
+  for (size_t i = 0; i < bins; ++i) {
+    binedge[i] = (i + 0.5) * binsize;
+    // this is correct, normalize use particle number, not volume
+    if (count[i] != 0) {
+      hist[i] /= count[i] * data.particleN;
+    }
+    // this is near correct, volumn * density is nearly the number
+    // yet not correct since we know number in bin exactly
+    // hist[i] /= (1. + 3. * i * i + 3. * i) * coff;
+  }
+
+  return Table({binedge, hist});
 }

@@ -9,7 +9,7 @@ int main(int argc, char const *argv[]) {
   if ((argc != 3) && (argc != 4)) {
     std::cout << "input number should be more than 2" << std::endl;
     std::cout << "output input.xyz attr_string or \n"
-              << "outputXYZ input.xyz attr_string output.xyz"
+              << "outputXYZ input.xyz attr_string output.xyz\n"
               << "e.g. output input.xyz \"x y z\" outputfile.xyz "
               << std::endl;
   }
@@ -31,11 +31,11 @@ int main(int argc, char const *argv[]) {
 
   Table out;
   for (auto &str : attrV) {
-    out.data.push_back(data.attr_table.data[data.attr_index[str]]);
+    out.push_back(data.attr_table[data.attr_index[str]]);
   }
-
   out.setcols(attrV.size());
   out.setrows(data.particleN);
+
 
   std::fstream outfile;
   std::string outputName;

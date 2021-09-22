@@ -17,7 +17,7 @@ int main(int argc, char const* argv[]) {
   std::string filename = argv[1];
   int window = std::stoi(argv[2]);
   double maxq = std::stod(argv[3]);
-
+  bool scalar = false;
   auto data = Frame();
 
   data.read(filename);

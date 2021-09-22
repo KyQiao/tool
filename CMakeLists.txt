@@ -1,8 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 project(Tool VERSION 0.0.1 LANGUAGES CXX)
 
-option(BUILD_SHARED_LIBS "Build shared libs" ON)
-option(TEST "test example" ON)
+# set cmake sanitizers
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/sanitizers-cmake/cmake" ${CMAKE_MODULE_PATH})
+
+find_package(Sanitizers)
+
+
+option(BUILD_SHARED_LIBS "Build shared libs" OFF)
+option(TEST "test example" OFF)
 option(FUNCTIONS "build functions" ON)
 include(GNUInstallDirs)
 
@@ -12,6 +18,12 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CXX_FLAGS)
 endif(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CXX_FLAGS)
 
 set(CMAKE_CXX_STANDARD 11)
+
+
+# # add sanitize option
+# set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+# set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+
 
 find_package(OpenMP REQUIRED)
 find_package(ZLIB REQUIRED)
@@ -74,6 +86,7 @@ if(FUNCTIONS)
   foreach(functionSource ${FunctionsFile})  
     string(REGEX REPLACE "^.*/([^/]*)\\.cpp$" "\\1" PROGNAME "${functionSource}")
     add_executable(${PROGNAME} ${functionSource})
+    add_sanitizers(${PROGNAME})
     include_directories(include/)
     target_link_libraries(${PROGNAME} PRIVATE tool OpenMP::OpenMP_CXX ZLIB::ZLIB voro++)
     install(TARGETS ${PROGNAME} RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

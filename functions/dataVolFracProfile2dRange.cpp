@@ -11,10 +11,10 @@
 #include "Table.hpp"
 
 int main(int argc, char const* argv[]) {
-  if ((argc != 3) && (argc != 4)) {
+  if ((argc != 5) && (argc != 6)) {
     std::cout << "input number should be two or three" << std::endl;
-    std::cout << "volumeFractionProfileZ dataFolder 100\n"
-              << "volumeFractionProfileZ dataFolder 100 output.dat"
+    std::cout << "volumeFractionProfile2dRange dataFolder lowRange HighRange 100\n"
+              << "volumeFractionProfile2dRange dataFolder lowRange HighRange 100 output.dat"
               << std::endl;
     return 0;
   }
@@ -26,17 +26,21 @@ int main(int argc, char const* argv[]) {
     std::cout << "input folder name is invalid!" << std::endl;
     return 0;
   }
-
-  int bins = std::stoi(std::string(argv[2]));
+  double lowRange = std::stod(std::string(argv[2]));
+  double highRange = std::stod(std::string(argv[3]));
+  int bins = std::stoi(std::string(argv[4]));
 
   Data data(folder);
   // by default load all file in folder
   data.load();
 
-  const double binsize = (data.front()->boxZH - data.front()->boxZL) / bins;
-  const double binVolume = binsize * data.front()->xl * data.front()->yl;
-  const double fourThirdPi_d8 = 4.1887902047863905 / 8;
-  const double ratio = fourThirdPi_d8 / binVolume;
+  const double binsize = (highRange - lowRange) / bins;
+  // now area
+  const double binVolume = binsize * data.front()->xl;
+  // const double fourThirdPi_d8 = 4.1887902047863905 / 8;
+  // 2d system
+  const double oneFourthPi = 3.1415926535 / 4;
+  const double ratio = oneFourthPi / binVolume;
 
   std::vector<double> hist(bins), binedge(bins);
   omp_lock_t* hist_locks = new omp_lock_t[bins];
@@ -56,23 +60,13 @@ int main(int argc, char const* argv[]) {
       size_t tmp = data.front()->attr_index["q"];
 #pragma omp parallel for private(index)
       for (size_t i = 0; i < data.front()->particleN; i++) {
-        index = static_cast<int>((data.front()->z[i] - data.front()->boxZL) / binsize);
-        omp_set_lock(&hist_locks[index]);
-        // when size info is stored
-        hist[index] += std::pow(data.front()->attr_table[tmp][i], 3);
-        omp_unset_lock(&hist_locks[index]);
-      }
-    } else {
-#pragma omp parallel for private(index)
-      for (size_t i = 0; i < data.front()->particleN; i++) {
-        index = static_cast<int>((data.front()->z[i] - data.front()->boxZL) / binsize);
-        omp_set_lock(&hist_locks[index]);
-        // by default the type 1 is 1 sigma and type 2 is 1.4 sigma.
-        if (data.front()->type[i] == 1)
-          hist[index] += 1;
-        else
-          hist[index] += 2.744;  //1.4^3
-        omp_unset_lock(&hist_locks[index]);
+        index = static_cast<int>((data.front()->y[i] - lowRange) / binsize);
+        if (index > -1 && index < bins) {
+          omp_set_lock(&hist_locks[index]);
+          // when size info is stored
+          hist[index] += std::pow(data.front()->attr_table[tmp][i], 2);
+          omp_unset_lock(&hist_locks[index]);
+        }
       }
     }
     // for (size_t i = 0; i < data.front()->particleN; i++) {
@@ -83,7 +77,7 @@ int main(int argc, char const* argv[]) {
   std::cout << "cal finished" << std::endl;
 
   for (size_t i = 0; i < binedge.size(); i++) {
-    binedge[i] = (i + 0.5) * binsize;
+    binedge[i] = lowRange + (i + 0.5) * binsize;
     hist[i] *= ratio / data.size();
   }
 
@@ -91,12 +85,12 @@ int main(int argc, char const* argv[]) {
 
   std::cout << "table finished" << std::endl;
 
-  if (argc == 3) {
-    std::string outputName = dirName.parent_path().filename().string() + ".volFracProf.xyz";
+  if (argc == 5) {
+    std::string outputName = dirName.parent_path().filename().string() + ".volFracProf2d.xyz";
     Table({binedge, hist}).output(outputName);
     // out.output(outputName);
   } else {
-    Table({binedge, hist}).output(std::string(argv[3]));
+    Table({binedge, hist}).output(std::string(argv[5]));
     // out.output(std::string(argv[3]));
   }
   return 0;

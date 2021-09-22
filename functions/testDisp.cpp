@@ -14,9 +14,9 @@ void testDisp(std::string s1, std::string s2) {
   Table out;
   out.setcols(3);
   out.setrows(data1.particleN);
-  out.data[0] = std::move(disp.dx);
-  out.data[1] = std::move(disp.dy);
-  out.data[2] = std::move(disp.dz);
+  out[0] = std::move(disp.dx);
+  out[1] = std::move(disp.dy);
+  out[2] = std::move(disp.dz);
   out.output("testDisp" + std::to_string(disp.dt) + ".xyz");
 }
 

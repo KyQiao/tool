@@ -6,7 +6,9 @@
 #include <string>
 #include <vector>
 
-#include "make_unique.hpp"
+#include "omp.h"
+
+// #include "make_unique.hpp"
 
 #define Debug 0
 
@@ -146,13 +148,24 @@ void Data::load(size_t step, size_t low, size_t high) {
     high = size;
   if (high < low)
     throw std::runtime_error("current range contains no file");
-  while (low < high) {
+
+  this->data.reserve((high - low) / step);
+
+
+// #pragma parallel for
+// parallel io for openmp cannot apply here
+  for (size_t i = low; i < high; i += step) {
 #if Debug
-    std::cout << "reading file:" << this->folder + left + std::to_string(fileIndex[low]) + right << std::endl;
+    std::cout << "reading file:" << this->folder + left + std::to_string(fileIndex[i]) + right << std::endl;
 #endif
-    this->data.push_back(std::make_unique<Frame>());
-    this->data.back()->read(this->folder + left + std::to_string(fileIndex[low]) + right);
-    low += step;
+    this->data.push_back(new Frame());
+    this->data.back()->read(this->folder + left + std::to_string(fileIndex[i]) + right);
   }
-  std::cout << "reading " << data.size() << "files." << std::endl;
+
+  // while (low < high) {
+  //   this->data.push_back(new Frame());
+  //   this->data.back()->read(this->folder + left + std::to_string(fileIndex[low]) + right);
+  //   low += step;
+  // }
+  std::cout << "reading " << data.size() << " files." << std::endl;
 }

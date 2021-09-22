@@ -50,7 +50,7 @@ int main(int argc, char const* argv[]) {
       index = static_cast<int>((data.z[i] - data.boxZL) / binsize);
       omp_set_lock(&hist_locks[index]);
       // when size info is stored
-      hist[index] += std::pow(data.attr_table.data[tmp][i], 3);
+      hist[index] += std::pow(data.attr_table[tmp][i], 3);
       omp_unset_lock(&hist_locks[index]);
     }
   } else {

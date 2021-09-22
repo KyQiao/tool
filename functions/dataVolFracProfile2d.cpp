@@ -62,7 +62,7 @@ int main(int argc, char const* argv[]) {
         index = static_cast<int>((data.front()->y[i] - data.front()->boxYL) / binsize);
         omp_set_lock(&hist_locks[index]);
         // when size info is stored
-        hist[index] += std::pow(data.front()->attr_table.data[tmp][i], 2);
+        hist[index] += std::pow(data.front()->attr_table[tmp][i], 2);
         omp_unset_lock(&hist_locks[index]);
       }
     } else {
