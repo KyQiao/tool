@@ -114,6 +114,10 @@ public:
   bool is3D() {
     return this->front()->is3D();
   }
+
+  void clear(){
+    this->data.clear();
+  }
 };
 
 #endif
